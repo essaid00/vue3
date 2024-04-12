@@ -1,63 +1,46 @@
 <template>
-  <Card title="成交占比" :loading="loading">
-    <div ref="chartRef" :style="{ width, height }"></div>
+  <Card title="项目" v-bind="$attrs">
+    <template #extra>
+      <a-button type="link" size="small">said</a-button>
+    </template>
+
+    <template v-for="item in items" :key="item">
+      <CardGrid class="!md:w-1/3 !w-full" @click="openModal(item.path)">
+        <span class="flex">
+          <Icon :icon="item.key" :color="item.key" size="30" />
+          <span class="text-lg ml-4">{{ item.name }}</span>
+        </span>
+        <div class="flex mt-2 h-10 text-secondary"> {{ item.path }} </div>
+        <div class="flex justify-between text-secondary">
+          <span>{{ item.type }}</span>
+          <span>{{ item.lastModifiedDateTime }}</span>
+          <span>{{ item.size }}</span>
+        </div>
+      </CardGrid>
+    </template>
   </Card>
 </template>
-<script lang="ts" setup>
-  import { Ref, ref, watch } from 'vue';
+<script lang="ts">
+  import { defineComponent, toRaw, onMounted, ref } from 'vue';
   import { Card } from 'ant-design-vue';
-  import { useECharts } from '/@/hooks/web/useECharts';
+  import { Icon } from '/@/components/Icon';
 
-  const props = defineProps({
-    loading: Boolean,
-    width: {
-      type: String as PropType<string>,
-      default: '100%',
-    },
-    height: {
-      type: String as PropType<string>,
-      default: '300px',
+  import { getFiles, getDownloadFileZip } from '/@/api/tus/index';
+  export default defineComponent({
+    components: { Card, CardGrid: Card.Grid, Icon },
+    setup() {
+      const items = ref([]);
+      onMounted(async () => {
+        items.value = await getFiles({ name: 'aff', path: 'C:\\upload_dir\\APPLICATION_APPOINT\\' }).then((data) => {
+          return data.fileList;
+        });
+        console.log(items);
+      });
+      async function openModal(path) {
+        await getDownloadFileZip({ name: 'aff', paths: [path] })
+      }
+
+      return { items, openModal };
     },
   });
-
-  const chartRef = ref<HTMLDivElement | null>(null);
-  const { setOptions } = useECharts(chartRef as Ref<HTMLDivElement>);
-  watch(
-    () => props.loading,
-    () => {
-      if (props.loading) {
-        return;
-      }
-      setOptions({
-        tooltip: {
-          trigger: 'item',
-        },
-
-        series: [
-          {
-            name: '访问来源',
-            type: 'pie',
-            radius: '80%',
-            center: ['50%', '50%'],
-            color: ['#5ab1ef', '#b6a2de', '#67e0e3', '#2ec7c9'],
-            data: [
-              { value: 500, name: '电子产品' },
-              { value: 310, name: '服装' },
-              { value: 274, name: '化妆品' },
-              { value: 400, name: '家居' },
-            ].sort(function (a, b) {
-              return a.value - b.value;
-            }),
-            roseType: 'radius',
-            animationType: 'scale',
-            animationEasing: 'exponentialInOut',
-            animationDelay: function () {
-              return Math.random() * 400;
-            },
-          },
-        ],
-      });
-    },
-    { immediate: true }
-  );
 </script>

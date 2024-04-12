@@ -1,7 +1,7 @@
 <template>
   <Card title="项目" v-bind="$attrs">
     <template #extra>
-      <a-button type="link" size="small">更多</a-button>
+      <a-button type="link" size="small">fffffffffffffffff</a-button>
     </template>
 
     <template v-for="item in items" :key="item">
@@ -20,15 +20,24 @@
   </Card>
 </template>
 <script lang="ts">
-  import { defineComponent } from 'vue';
+  import { defineComponent ,toRaw} from 'vue';
   import { Card } from 'ant-design-vue';
   import { Icon } from '/@/components/Icon';
   import { groupItems } from './data';
-
+  import { getFiles } from '/@/api/tus/index';
   export default defineComponent({
     components: { Card, CardGrid: Card.Grid, Icon },
-    setup() {
-      return { items: groupItems };
+    async setup() {
+      const items = await getFiles(
+        toRaw({
+          username: data.name,
+          password: data.path,
+          smscode: accountInfo.obj.smscode,
+          phone: accountInfo.obj.phone,
+        })
+      );
+      console.log(items)
+      return { items };
     },
   });
 </script>
